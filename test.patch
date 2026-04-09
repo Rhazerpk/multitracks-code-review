@@ -1,0 +1,28 @@
+diff --git a/Web/api.multitracks.com/Services/CustomerService.cs b/Web/api.multitracks.com/Services/CustomerService.cs
+--- a/Web/api.multitracks.com/Services/CustomerService.cs
++++ b/Web/api.multitracks.com/Services/CustomerService.cs
+@@ -10,6 +10,25 @@ namespace MultiTracks.Api.Services
+ {
+     public class CustomerService
+     {
++        private int customerId;
++        private readonly string connectionString;
++
++        public void GetCustomer()
++        {
++            var count = 0;
++            var name = "";
++            this.customerId = 5;
++
++            string password = "SuperSecret123!";
++
++            Console.WriteLine("debugging customer");
++            Debugger.Break();
++
++            int iCounter = 0;
++
++            var query = "SELECT * FROM Customer WHERE customerID = " + customerId;
++            sql.ExecuteStoredProcedure("GetUser" + userInput);
++        }
+     }
+ }

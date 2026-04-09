@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:8000/api/health)",
+      "Bash(start:*)",
+      "Bash(python:*)",
+      "Bash(python -c \":*)",
+      "Bash(python -c \"import sys; sys.path.insert\\(0, ''''web''''\\); sys.path.insert\\(0, ''''.''''\\); import web.app; print\\(''''app.py imports OK''''\\)\")",
+      "Bash(pip install:*)",
+      "Bash(uvicorn app:app --reload --port 8000)",
+      "Bash(taskkill /F /IM python.exe /T)",
+      "Bash(taskkill /F /IM uvicorn.exe /T)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8000)",
+      "Bash(cmd /c \"for /f \"\"tokens=5\"\" %a in \\(''netstat -ano ^| findstr :8000 ^| findstr LISTENING''\\) do taskkill /PID %a /F\")",
+      "Bash(cmd /c \"taskkill /PID 12468 /F\")",
+      "Bash(cmd /c \"taskkill /PID 45240 /F\")",
+      "Bash(curl -s http://localhost:8080/api/health)",
+      "Bash(curl -s http://localhost:8080/api/my-issues)",
+      "Bash(curl -s http://localhost:8090/api/health)",
+      "Bash(wc:*)",
+      "Bash(grep -E \"class.*Rule\" \"/c/Users/AlbertDelgado/OneDrive - MultiTracks.com LLC/Desktop/code-review/rules\"/*.py)",
+      "Bash(ls:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python main.py --local test.patch)",
+      "Bash(PYTHONIOENCODING=utf-8 python -m uvicorn app:app --reload --port 8000)",
+      "Bash(PYTHONIOENCODING=utf-8 uvicorn app:app --reload --port 8000)",
+      "Bash(curl:*)",
+      "Bash(powershell:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c \"import app\")",
+      "Bash(PYTHONIOENCODING=utf-8 python -m uvicorn app:app --port 8001)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\AlbertDelgado\\\\Desktop\\\\test_repo\\\\Services\")"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | grep -qE 'rules[/\\\\].+\\.py$' && cd \"C:/Users/AlbertDelgado/OneDrive - MultiTracks.com LLC/Desktop/code-review\" && python test_rules.py 2>&1 || true",
+            "timeout": 30,
+            "statusMessage": "Running tests..."
+          }
+        ]
+      }
+    ]
+  }
+}

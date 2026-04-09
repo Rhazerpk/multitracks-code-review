@@ -1,0 +1,46 @@
+name: Auto Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.cs'
+      - '**.sql'
+      - '**.config'
+      - '**.json'
+      - '**.xml'
+      - '**.csproj'
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  code-review:
+    name: Analyze PR Changes
+    runs-on: ubuntu-latest
+    # Don't run on draft PRs
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: '.github/code-review/requirements.txt'
+
+      - name: Install dependencies
+        run: pip install -r .github/code-review/requirements.txt
+
+      - name: Run code review
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        working-directory: .github/code-review
+        run: python main.py

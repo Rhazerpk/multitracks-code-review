@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Code Review Dashboard — MultiTracks.com</title>
+	<link rel="stylesheet" href="/static/styles.css">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+	<header>
+		<div class="header-content">
+			<div class="logo">
+				<div class="logo-icon">
+					<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<!-- Background rounded square -->
+						<rect width="36" height="36" rx="10" fill="url(#logoGrad)"/>
+						<!-- Code brackets -->
+						<path d="M13 12L8 18L13 24" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M23 12L28 18L23 24" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+						<!-- Checkmark in center -->
+						<path d="M15 18.5L17.2 20.5L21 16" stroke="#a5f3a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<defs>
+							<linearGradient id="logoGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+								<stop offset="0%" stop-color="#6366f1"/>
+								<stop offset="100%" stop-color="#4f46e5"/>
+							</linearGradient>
+						</defs>
+					</svg>
+				</div>
+				<div class="logo-text">
+					<h1>Code Review</h1>
+					<span class="logo-sub">MultiTracks.com</span>
+				</div>
+			</div>
+			<div class="header-right">
+				<div class="status-indicator" id="statusIndicator">
+					<span class="status-dot"></span>
+					<span class="status-text">Checking...</span>
+				</div>
+				<button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode" onclick="toggleTheme()">🌙</button>
+			</div>
+		</div>
+	</header>
+
+	<main>
+		<!-- Active Issues Panel -->
+		<section class="active-issues-section" id="activeIssuesSection" style="display:none;">
+			<div class="active-issues-header">
+				<h2>My Active Issues</h2>
+				<button class="refresh-btn" onclick="loadMyIssues(true)" title="Refresh">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="23 4 23 10 17 10"/>
+						<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+					</svg>
+					Refresh
+				</button>
+			</div>
+			<div class="active-issues-scroll" id="activeIssuesList">
+				<div class="issues-loading">Loading issues...</div>
+			</div>
+		</section>
+
+		<!-- Input Section -->
+		<section class="input-section">
+			<div class="input-card">
+
+				<!-- Tabs -->
+				<div class="review-tabs">
+					<button class="tab-btn active" onclick="switchTab('github', this)">
+						<svg width="15" height="15" viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg">
+							<path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" fill="currentColor"/>
+						</svg>
+						GitHub Review
+					</button>
+					<button class="tab-btn" onclick="switchTab('local', this)">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+						</svg>
+						Local Review
+					</button>
+				</div>
+
+				<!-- GitHub Review Tab -->
+				<div id="tab-github" class="tab-content">
+					<p class="subtitle">Enter a Jira issue key to review its linked PR against coding standards and scope.</p>
+					<form id="reviewForm">
+						<div class="input-row">
+							<div class="input-group">
+								<label for="issueKey">Jira Issue Key</label>
+								<input type="text" id="issueKey" placeholder="MT-145199" required pattern="[A-Za-z]+-\d+" autocomplete="off">
+							</div>
+							<div class="input-group">
+								<label for="prNumber">PR Number <span class="optional">(optional — auto-detected)</span></label>
+								<input type="number" id="prNumber" placeholder="18671" min="1">
+							</div>
+							<button type="submit" id="submitBtn">
+								<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+								</svg>
+								Run Review
+							</button>
+						</div>
+					</form>
+				</div>
+
+				<!-- Local Review Tab -->
+				<div id="tab-local" class="tab-content" style="display:none;">
+					<p class="subtitle">Analyze your local repository. Scans uncommitted git changes, or all files if no git diff is found.</p>
+					<div class="input-row">
+						<div class="input-group" style="flex:1;">
+							<label for="localRepoPath">Repository Folder</label>
+							<div class="repo-root-wrap">
+								<input type="text" id="localRepoPath" placeholder="C:\code\multitracks.com" autocomplete="off"
+								oninput="this.classList.remove('input-error'); document.getElementById('localRepoPathError')?.remove()">
+								<span id="localPathSaved" class="repo-root-saved" style="display:none;">✓</span>
+							</div>
+						</div>
+						<button type="button" class="settings-save-btn" onclick="browseLocalRepo(this)">
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+							</svg>
+							Browse…
+						</button>
+						<button type="button" id="localSubmitBtn" class="primary-btn" onclick="handleLocalSubmit()">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+							</svg>
+							Run Review
+						</button>
+					</div>
+				</div>
+
+			</div>
+		</section>
+
+		<!-- Loading State -->
+		<section class="loading-section" id="loadingSection" style="display: none;">
+			<div class="loader">
+				<div class="spinner"></div>
+				<p>Analyzing PR changes...</p>
+				<p class="loading-detail" id="loadingDetail">Fetching Jira issue details</p>
+				<div class="progress-bar-wrap" id="progressBarWrap">
+					<div class="progress-bar" id="progressBar"></div>
+				</div>
+				<p class="progress-text" id="progressText"></p>
+				<div class="timeout-warning" id="timeoutWarning" style="display:none;">
+					<p>⚠️ This is taking longer than expected...</p>
+					<button class="btn-secondary" onclick="cancelRequest()">Cancel</button>
+				</div>
+			</div>
+		</section>
+
+		<!-- Error State -->
+		<section class="error-section" id="errorSection" style="display: none;">
+			<div class="error-card">
+				<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+				</svg>
+				<h3 id="errorTitle">Something went wrong</h3>
+				<p id="errorMessage"></p>
+				<button onclick="resetForm()" class="btn-secondary">Try Again</button>
+			</div>
+		</section>
+
+		<!-- Results Section -->
+		<section class="results-section" id="resultsSection" style="display: none;">
+
+			<!-- Issue & PR Header -->
+			<div class="result-header" id="resultHeader">
+				<div class="issue-info">
+					<span class="issue-badge" id="issueType">Task</span>
+					<h2 id="resultIssueKey">MT-145199</h2>
+					<button class="copy-btn" title="Copy issue key" onclick="copyToClipboard(document.getElementById('resultIssueKey').textContent, this)">📋</button>
+					<p id="resultIssueTitle" class="issue-title"></p>
+				</div>
+				<div class="pr-info">
+					<a href="#" id="prLink" target="_blank" class="pr-link">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/>
+							<path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>
+						</svg>
+						PR #<span id="prNum"></span>
+					</a>
+					<button class="copy-btn" title="Copy PR URL" onclick="copyToClipboard(document.getElementById('prLink').href, this)">📋</button>
+					<span id="prTitle" class="pr-title"></span>
+					<button class="check-run-btn" id="postCheckBtn" onclick="postCheckRun()" title="Post this review as a GitHub Status Check on the PR" style="display:none;">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="9 11 12 14 22 4"/>
+							<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+						</svg>
+						Post to GitHub
+					</button>
+					<span id="checkRunResult" style="display:none;"></span>
+				</div>
+			</div>
+
+			<!-- Summary Cards -->
+			<div class="summary-grid">
+				<div class="summary-card total">
+					<div class="summary-number" id="totalIssues">0</div>
+					<div class="summary-label">Total Issues</div>
+				</div>
+				<div class="summary-card errors">
+					<div class="summary-number" id="totalErrors">0</div>
+					<div class="summary-label">Errors</div>
+				</div>
+				<div class="summary-card warnings">
+					<div class="summary-number" id="totalWarnings">0</div>
+					<div class="summary-label">Warnings</div>
+				</div>
+				<div class="summary-card suggestions">
+					<div class="summary-number" id="totalSuggestions">0</div>
+					<div class="summary-label">Suggestions</div>
+				</div>
+			</div>
+
+			<!-- Scope Validation -->
+			<div class="scope-section">
+				<h3>Scope Validation</h3>
+				<p class="scope-description">Do the PR changes match what the Jira issue requests?</p>
+				<div class="scope-meter">
+					<div class="scope-bar">
+						<div class="scope-fill" id="scopeFill" style="width: 0%"></div>
+					</div>
+					<span class="scope-score" id="scopeScore">0%</span>
+				</div>
+				<div class="scope-details" id="scopeDetails">
+					<div class="scope-column" id="inScopeList">
+						<h4>In Scope</h4>
+					</div>
+					<div class="scope-column out-of-scope" id="outOfScopeList">
+						<h4>Out of Scope</h4>
+					</div>
+					<div class="scope-column missing" id="missingList">
+						<h4>Potentially Missing</h4>
+					</div>
+				</div>
+			</div>
+
+			<!-- Summary Text -->
+			<div class="summary-text" id="summaryText"></div>
+
+			<!-- Top Violated Rules -->
+			<div class="top-rules-section" id="topRulesSection" style="display:none;">
+				<h3>Most Violated Rules</h3>
+				<div id="topRulesList" class="top-rules-list"></div>
+			</div>
+
+			<!-- Analytics Section -->
+			<div class="analytics-section" id="analyticsSection" style="display:none;">
+				<h3>Historical Analytics</h3>
+				<div class="charts-grid">
+					<div class="chart-card">
+						<h4>Most Common Violations</h4>
+						<canvas id="violationsChart" height="220"></canvas>
+					</div>
+					<div class="chart-card">
+						<h4>Quality Score Trend (Last 30 Days)</h4>
+						<canvas id="scoreTrendChart" height="220"></canvas>
+					</div>
+					<div class="chart-card">
+						<h4>Files With Most Issues</h4>
+						<canvas id="filesChart" height="220"></canvas>
+					</div>
+				</div>
+			</div>
+
+			<!-- File Results -->
+			<div class="files-section">
+				<div class="files-header">
+					<h3>File Analysis</h3>
+					<div class="files-toolbar">
+						<div class="filter-bar">
+							<button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+							<button class="filter-btn" data-filter="error" onclick="setFilter('error', this)">Errors</button>
+							<button class="filter-btn" data-filter="warning" onclick="setFilter('warning', this)">Warnings</button>
+							<button class="filter-btn" data-filter="suggestion" onclick="setFilter('suggestion', this)">Suggestions</button>
+						</div>
+						<div class="export-buttons">
+							<button class="export-btn" onclick="exportJSON()" title="Export results as JSON">⬇ JSON</button>
+							<button class="export-btn export-btn--html" id="exportHTMLBtn" onclick="exportHTML()" title="Export as HTML report" style="display:none;">⬇ HTML Report</button>
+						</div>
+					</div>
+				</div>
+				<div id="fileResults"></div>
+			</div>
+
+		</section>
+	</main>
+
+	<footer>
+		<p>MultiTracks.com Auto Code Review Bot &mdash; Built with Python + FastAPI</p>
+	</footer>
+
+	<script src="/static/app.js"></script>
+</body>
+</html>
